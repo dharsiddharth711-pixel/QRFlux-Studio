@@ -12,6 +12,8 @@ import LivePreview from './components/LivePreview';
 import RecentHistory from './components/RecentHistory';
 import QrScannerModal from './components/QrScannerModal';
 import AuthModal from './components/AuthModal';
+import ThemeCustomizerModal from './components/ThemeCustomizerModal';
+import TrialLimitModal from './components/TrialLimitModal';
 import { Sparkles } from 'lucide-react';
 
 export default function App() {
@@ -33,9 +35,28 @@ export default function App() {
       return null;
     }
   });
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
-  // Active configuration state
+  // Guest Free Trials state (5 free trials max for non-logged-in users)
+  const [trialsLeft, setTrialsLeft] = useState(() => {
+    try {
+      const savedTrials = localStorage.getItem('qr_flux_trials');
+      return savedTrials !== null ? parseInt(savedTrials, 10) : 5;
+    } catch (e) {
+      return 5;
+    }
+  });
+
+  // Website Theme state for Logged-In Users
+  const [siteTheme, setSiteTheme] = useState({ accentId: 'indigo', bgId: 'dark-glass' });
+
+  // Modals & Toasts
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
+  const [isTrialLimitOpen, setIsTrialLimitOpen] = useState(false);
+  const [toasts, setToasts] = useState([]);
+
+  // Active QR configuration state
   const [config, setConfig] = useState({
     size: 260,
     margin: 10,
@@ -66,11 +87,7 @@ export default function App() {
     }
   });
 
-  // Modals & Toasts
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [toasts, setToasts] = useState([]);
-
-  // Save history & user to localStorage
+  // Persist history, trials & user
   useEffect(() => {
     try {
       localStorage.setItem('qr_studio_history', JSON.stringify(history));
@@ -78,6 +95,14 @@ export default function App() {
       console.error(e);
     }
   }, [history]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('qr_flux_trials', trialsLeft.toString());
+    } catch (e) {
+      console.error(e);
+    }
+  }, [trialsLeft]);
 
   useEffect(() => {
     try {
@@ -102,11 +127,35 @@ export default function App() {
 
   const handleLoginSuccess = (userObj) => {
     setUser(userObj);
+    showToast(`Logged in as ${userObj.name} (Pro v2.4.0 active)`);
   };
 
   const handleLogout = () => {
     setUser(null);
     showToast('Signed out of account.');
+  };
+
+  // Check and consume a trial for non-logged-in users
+  const checkTrialLimit = () => {
+    if (user) return true; // Unlimited for signed-in users
+
+    if (trialsLeft <= 0) {
+      setIsTrialLimitOpen(true);
+      return false;
+    }
+    return true;
+  };
+
+  const consumeTrial = () => {
+    if (!user && trialsLeft > 0) {
+      const newTrials = trialsLeft - 1;
+      setTrialsLeft(newTrials);
+      if (newTrials === 0) {
+        showToast('You have used all 5 free trial generations!');
+      } else {
+        showToast(`Generation used (${newTrials} free trials remaining)`);
+      }
+    }
   };
 
   // Get active payload text based on active tab
@@ -123,6 +172,9 @@ export default function App() {
 
   // Save to recent
   const handleSaveToRecent = (newItem) => {
+    if (!checkTrialLimit()) return;
+
+    consumeTrial();
     setHistory((prev) => [newItem, ...prev.slice(0, 19)]);
     showToast('Saved QR code to Recent History!');
   };
@@ -172,6 +224,9 @@ export default function App() {
 
   // Load scanner result into studio
   const handleLoadScannerResult = (text) => {
+    if (!checkTrialLimit()) return;
+    consumeTrial();
+
     if (text.startsWith('http://') || text.startsWith('https://')) {
       setActiveTab('url');
       setUrlContent(text);
@@ -191,12 +246,16 @@ export default function App() {
     <div className="app-container">
       {/* Navbar Header */}
       <Header
-        onOpenScanner={() => setIsScannerOpen(true)}
+        onOpenScanner={() => {
+          if (checkTrialLimit()) setIsScannerOpen(true);
+        }}
         historyCount={history.length}
         onScrollToHistory={scrollToHistory}
         onOpenAuth={() => setIsAuthOpen(true)}
         user={user}
         onLogout={handleLogout}
+        trialsLeft={trialsLeft}
+        onOpenThemeModal={() => setIsThemeModalOpen(true)}
       />
 
       {/* Hero Section */}
@@ -240,12 +299,19 @@ export default function App() {
               </span>
             </div>
 
-            <Customizer config={config} setConfig={setConfig} />
+            <Customizer 
+              config={config} 
+              setConfig={setConfig} 
+              isLoggedIn={!!user}
+              onOpenAuth={() => setIsAuthOpen(true)}
+            />
 
             {/* Presets Selector */}
             <PresetSelector
               activePresetId={config.presetId}
               onSelectPreset={handleSelectPreset}
+              isLoggedIn={!!user}
+              onOpenAuth={() => setIsAuthOpen(true)}
             />
           </div>
         </div>
@@ -287,6 +353,22 @@ export default function App() {
         showToast={showToast}
       />
 
+      {/* Theme Customizer Modal (For Logged-In Users) */}
+      <ThemeCustomizerModal
+        isOpen={isThemeModalOpen}
+        onClose={() => setIsThemeModalOpen(false)}
+        siteTheme={siteTheme}
+        setSiteTheme={setSiteTheme}
+        showToast={showToast}
+      />
+
+      {/* Free Trial Limit Exceeded Modal */}
+      <TrialLimitModal
+        isOpen={isTrialLimitOpen}
+        onClose={() => setIsTrialLimitOpen(false)}
+        onOpenAuth={() => setIsAuthOpen(true)}
+      />
+
       {/* Toast Notifications */}
       <div className="toast-container">
         {toasts.map((t) => (
@@ -309,7 +391,7 @@ export default function App() {
         color: 'var(--text-dim)'
       }}>
         <div>QRFlux Studio • Create QR codes quickly and easily</div>
-        <div>Built with React & Vite</div>
+        <div>Version 2.4.0 Pro • Built with React & Vite</div>
       </footer>
     </div>
   );

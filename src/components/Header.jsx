@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
-import { QrCode, Scan, History, LogIn, User, LogOut, Crown, ChevronDown } from 'lucide-react';
+import { Scan, History, LogIn, LogOut, Crown, ChevronDown, Palette, Zap } from 'lucide-react';
 
-export default function Header({ onOpenScanner, historyCount, onScrollToHistory, onOpenAuth, user, onLogout }) {
+export default function Header({ 
+  onOpenScanner, 
+  historyCount, 
+  onScrollToHistory, 
+  onOpenAuth, 
+  user, 
+  onLogout,
+  trialsLeft,
+  onOpenThemeModal
+}) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   return (
@@ -17,6 +26,25 @@ export default function Header({ onOpenScanner, historyCount, onScrollToHistory,
       </div>
 
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        {/* Trial Badge for Guest Users */}
+        {!user && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '6px 12px',
+            borderRadius: '999px',
+            background: trialsLeft > 0 ? 'rgba(245, 158, 11, 0.12)' : 'rgba(244, 63, 94, 0.15)',
+            border: `1px solid ${trialsLeft > 0 ? 'rgba(245, 158, 11, 0.3)' : 'rgba(244, 63, 94, 0.4)'}`,
+            fontSize: '0.78rem',
+            fontWeight: 700,
+            color: trialsLeft > 0 ? 'var(--accent-amber)' : 'var(--accent-rose)'
+          }}>
+            <Zap size={14} />
+            <span>{trialsLeft > 0 ? `Free Trials: ${trialsLeft} / 5 left` : '0 Trials Left'}</span>
+          </div>
+        )}
+
         <button 
           className="btn-secondary"
           onClick={onScrollToHistory}
@@ -34,6 +62,19 @@ export default function Header({ onOpenScanner, historyCount, onScrollToHistory,
           <Scan size={18} />
           <span>QR Scanner</span>
         </button>
+
+        {/* Theme Customizer Trigger for Signed-in Users */}
+        {user && (
+          <button
+            className="btn-secondary"
+            onClick={onOpenThemeModal}
+            title="Customize Website Theme & Glow Accents"
+            style={{ width: 'auto', padding: '10px 14px' }}
+          >
+            <Palette size={16} style={{ color: 'var(--accent-primary)' }} />
+            <span>Theme</span>
+          </button>
+        )}
 
         {!user ? (
           <button 
@@ -80,7 +121,7 @@ export default function Header({ onOpenScanner, historyCount, onScrollToHistory,
                 background: 'linear-gradient(135deg, var(--accent-amber), var(--accent-rose))',
                 color: '#fff'
               }}>
-                PRO
+                PRO v2.4
               </span>
               <ChevronDown size={14} style={{ color: 'var(--text-muted)' }} />
             </button>
@@ -91,12 +132,12 @@ export default function Header({ onOpenScanner, historyCount, onScrollToHistory,
                   position: 'absolute',
                   right: 0,
                   top: '110%',
-                  width: '220px',
+                  width: '240px',
                   background: 'var(--bg-secondary)',
                   border: '1px solid var(--border-color)',
                   borderRadius: 'var(--radius-md)',
                   boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-                  padding: '12px',
+                  padding: '14px',
                   zIndex: 100
                 }}
                 onMouseLeave={() => setDropdownOpen(false)}
@@ -106,9 +147,21 @@ export default function Header({ onOpenScanner, historyCount, onScrollToHistory,
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{user.email}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px', fontSize: '0.72rem', color: 'var(--accent-amber)', fontWeight: 700 }}>
                     <Crown size={12} />
-                    <span>Pro Account Active</span>
+                    <span>Pro Account Edition (v2.4.0)</span>
                   </div>
                 </div>
+
+                <button
+                  className="btn-secondary"
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    onOpenThemeModal();
+                  }}
+                  style={{ width: '100%', padding: '8px 12px', fontSize: '0.85rem', marginBottom: '6px' }}
+                >
+                  <Palette size={14} />
+                  <span>Customize Site Theme</span>
+                </button>
 
                 <button
                   className="btn-secondary"

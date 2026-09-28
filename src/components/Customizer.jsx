@@ -90,7 +90,7 @@ export default function Customizer({ config, setConfig, isLoggedIn, onOpenAuth }
 
       <hr style={{ borderColor: 'var(--border-color)', opacity: 0.5 }} />
 
-      {/* 2. Color & Gradient Styling (Displaying Color Names instead of raw Hex code text boxes) */}
+      {/* 2. Color & Gradient Styling */}
       <div>
         <div className="section-header" style={{ marginBottom: '14px' }}>
           <span className="section-title">
@@ -246,57 +246,88 @@ export default function Customizer({ config, setConfig, isLoggedIn, onOpenAuth }
 
       <hr style={{ borderColor: 'var(--border-color)', opacity: 0.5 }} />
 
-      {/* 3. Module & Corner Shape Styling */}
+      {/* 3. Module & Corner Shape Styling (Gated for Signed-In Users) */}
       <div>
         <div className="section-header" style={{ marginBottom: '14px' }}>
           <span className="section-title">
             <Shapes size={18} />
             <span>Patterns & Shapes</span>
           </span>
+          {!isLoggedIn && (
+            <span style={{ fontSize: '0.75rem', color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 700 }}>
+              <Lock size={12} /> PRO FEATURE
+            </span>
+          )}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Dot Pattern</label>
-            <select
-              className="form-select"
-              value={config.dotsType}
-              onChange={(e) => updateConfig('dotsType', e.target.value)}
-            >
-              <option value="square">Square</option>
-              <option value="dots">Dots</option>
-              <option value="rounded">Rounded</option>
-              <option value="classy">Classy</option>
-              <option value="classy-rounded">Classy Rounded</option>
-              <option value="extra-rounded">Extra Rounded</option>
-            </select>
+        {!isLoggedIn ? (
+          <div 
+            onClick={onOpenAuth}
+            style={{
+              padding: '18px',
+              borderRadius: 'var(--radius-md)',
+              background: 'rgba(245, 158, 11, 0.08)',
+              border: '1px dashed rgba(245, 158, 11, 0.3)',
+              textAlign: 'center',
+              cursor: 'pointer'
+            }}
+          >
+            <Lock size={22} style={{ color: 'var(--accent-amber)', marginBottom: '6px' }} />
+            <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff' }}>
+              Custom Patterns & Shapes are Locked
+            </div>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+              Sign in to unlock Dots, Rounded, Classy, Extra-Rounded modules and Circle Eye shapes!
+            </p>
+            <button className="btn-primary" style={{ marginTop: '10px', padding: '6px 14px', fontSize: '0.8rem' }}>
+              <Sparkles size={14} />
+              <span>Sign In to Unlock Shapes</span>
+            </button>
           </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Dot Pattern</label>
+              <select
+                className="form-select"
+                value={config.dotsType}
+                onChange={(e) => updateConfig('dotsType', e.target.value)}
+              >
+                <option value="square">Square</option>
+                <option value="dots">Dots</option>
+                <option value="rounded">Rounded</option>
+                <option value="classy">Classy</option>
+                <option value="classy-rounded">Classy Rounded</option>
+                <option value="extra-rounded">Extra Rounded</option>
+              </select>
+            </div>
 
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Corner Frame</label>
-            <select
-              className="form-select"
-              value={config.cornersSquareType}
-              onChange={(e) => updateConfig('cornersSquareType', e.target.value)}
-            >
-              <option value="square">Square</option>
-              <option value="extra-rounded">Extra Rounded</option>
-              <option value="dot">Dot Circle</option>
-            </select>
-          </div>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Corner Frame</label>
+              <select
+                className="form-select"
+                value={config.cornersSquareType}
+                onChange={(e) => updateConfig('cornersSquareType', e.target.value)}
+              >
+                <option value="square">Square</option>
+                <option value="extra-rounded">Extra Rounded</option>
+                <option value="dot">Dot Circle</option>
+              </select>
+            </div>
 
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Corner Eye</label>
-            <select
-              className="form-select"
-              value={config.cornersDotType}
-              onChange={(e) => updateConfig('cornersDotType', e.target.value)}
-            >
-              <option value="square">Square</option>
-              <option value="dot">Dot Circle</option>
-            </select>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Corner Eye</label>
+              <select
+                className="form-select"
+                value={config.cornersDotType}
+                onChange={(e) => updateConfig('cornersDotType', e.target.value)}
+              >
+                <option value="square">Square</option>
+                <option value="dot">Dot Circle</option>
+              </select>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <hr style={{ borderColor: 'var(--border-color)', opacity: 0.5 }} />
@@ -328,7 +359,7 @@ export default function Customizer({ config, setConfig, isLoggedIn, onOpenAuth }
           <div 
             onClick={onOpenAuth}
             style={{
-              padding: '20px',
+              padding: '18px',
               borderRadius: 'var(--radius-md)',
               background: 'rgba(245, 158, 11, 0.08)',
               border: '1px dashed rgba(245, 158, 11, 0.3)',
@@ -336,14 +367,14 @@ export default function Customizer({ config, setConfig, isLoggedIn, onOpenAuth }
               cursor: 'pointer'
             }}
           >
-            <Lock size={24} style={{ color: 'var(--accent-amber)', marginBottom: '8px' }} />
+            <Lock size={22} style={{ color: 'var(--accent-amber)', marginBottom: '6px' }} />
             <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff' }}>
               Center Logo Overlays are Locked
             </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
               Sign in or create a free account to embed WhatsApp, Instagram, Wi-Fi or custom image logos into your QR codes!
             </p>
-            <button className="btn-primary" style={{ marginTop: '12px', padding: '8px 16px', fontSize: '0.82rem' }}>
+            <button className="btn-primary" style={{ marginTop: '10px', padding: '6px 14px', fontSize: '0.8rem' }}>
               <Sparkles size={14} />
               <span>Sign In to Unlock Logos</span>
             </button>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Scan, History, LogIn, LogOut, Crown, ChevronDown, Palette, Zap } from 'lucide-react';
+import { Scan, History, LogIn, LogOut, Crown, ChevronDown, Palette, Zap, CheckCircle2 } from 'lucide-react';
 
 export default function Header({ 
   onOpenScanner, 
@@ -98,8 +98,8 @@ export default function Header({
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px',
-                padding: '6px 12px 6px 8px',
+                gap: '8px',
+                padding: '6px 14px 6px 8px',
                 background: 'var(--bg-input)',
                 border: '1px solid var(--border-color)',
                 borderRadius: '999px',
@@ -114,14 +114,19 @@ export default function Header({
               />
               <span style={{ fontSize: '0.88rem', fontWeight: 700 }}>{user.name}</span>
               <span style={{
-                fontSize: '0.65rem',
+                fontSize: '0.72rem',
                 fontWeight: 800,
-                padding: '2px 6px',
+                padding: '2px 8px',
                 borderRadius: '999px',
-                background: 'linear-gradient(135deg, var(--accent-amber), var(--accent-rose))',
-                color: '#fff'
+                background: 'rgba(16, 185, 129, 0.18)',
+                border: '1px solid rgba(16, 185, 129, 0.4)',
+                color: 'var(--accent-emerald)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
               }}>
-                PRO v2.4
+                <CheckCircle2 size={12} />
+                (Logged In User)
               </span>
               <ChevronDown size={14} style={{ color: 'var(--text-muted)' }} />
             </button>
@@ -132,7 +137,7 @@ export default function Header({
                   position: 'absolute',
                   right: 0,
                   top: '110%',
-                  width: '240px',
+                  width: '250px',
                   background: 'var(--bg-secondary)',
                   border: '1px solid var(--border-color)',
                   borderRadius: 'var(--radius-md)',
@@ -145,9 +150,17 @@ export default function Header({
                 <div style={{ paddingBottom: '10px', marginBottom: '10px', borderBottom: '1px solid var(--border-color)' }}>
                   <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#fff' }}>{user.name}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{user.email}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px', fontSize: '0.72rem', color: 'var(--accent-amber)', fontWeight: 700 }}>
-                    <Crown size={12} />
-                    <span>Pro Account Edition (v2.4.0)</span>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '4px', 
+                    marginTop: '8px', 
+                    fontSize: '0.75rem', 
+                    color: 'var(--accent-emerald)', 
+                    fontWeight: 700 
+                  }}>
+                    <Crown size={14} style={{ color: 'var(--accent-amber)' }} />
+                    <span>Logged In User • Pro (v2.4.0)</span>
                   </div>
                 </div>
 

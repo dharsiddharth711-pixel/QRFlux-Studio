@@ -11,17 +11,29 @@ import PresetSelector from './components/PresetSelector';
 import LivePreview from './components/LivePreview';
 import RecentHistory from './components/RecentHistory';
 import QrScannerModal from './components/QrScannerModal';
-import { Sparkles, SlidersHorizontal } from 'lucide-react';
+import AuthModal from './components/AuthModal';
+import { Sparkles } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('url');
 
   // Form input contents
   const [urlContent, setUrlContent] = useState('https://tenor.com/kYMueBQkwzl.gif');
-  const [textContent, setTextContent] = useState('Welcome to QR Studio!');
+  const [textContent, setTextContent] = useState('Welcome to QRFlux Studio!');
   const [emailPayload, setEmailPayload] = useState('mailto:contact@example.com');
   const [phonePayload, setPhonePayload] = useState('tel:+15550000000');
   const [wifiPayload, setWifiPayload] = useState('WIFI:S:MyWiFi;T:WPA;P:Pass123;;');
+
+  // User Authentication state
+  const [user, setUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('qr_flux_user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   // Active configuration state
   const [config, setConfig] = useState({
@@ -58,7 +70,7 @@ export default function App() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
 
-  // Save history to localStorage
+  // Save history & user to localStorage
   useEffect(() => {
     try {
       localStorage.setItem('qr_studio_history', JSON.stringify(history));
@@ -67,6 +79,18 @@ export default function App() {
     }
   }, [history]);
 
+  useEffect(() => {
+    try {
+      if (user) {
+        localStorage.setItem('qr_flux_user', JSON.stringify(user));
+      } else {
+        localStorage.removeItem('qr_flux_user');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, [user]);
+
   // Show Toast notification helper
   const showToast = (message) => {
     const id = Date.now();
@@ -74,6 +98,15 @@ export default function App() {
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 3500);
+  };
+
+  const handleLoginSuccess = (userObj) => {
+    setUser(userObj);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    showToast('Signed out of account.');
   };
 
   // Get active payload text based on active tab
@@ -161,13 +194,16 @@ export default function App() {
         onOpenScanner={() => setIsScannerOpen(true)}
         historyCount={history.length}
         onScrollToHistory={scrollToHistory}
+        onOpenAuth={() => setIsAuthOpen(true)}
+        user={user}
+        onLogout={handleLogout}
       />
 
       {/* Hero Section */}
       <div className="hero-section">
         <div className="badge-tag">
           <Sparkles size={14} />
-          <span>QR Code Designer Studio</span>
+          <span>QR CODE DESIGNER STUDIO</span>
         </div>
         <h2 className="hero-title">Create beautiful QR codes</h2>
         <p className="hero-subtitle">
@@ -243,6 +279,14 @@ export default function App() {
         showToast={showToast}
       />
 
+      {/* Auth Modal (Login / Sign Up) */}
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        onLoginSuccess={handleLoginSuccess}
+        showToast={showToast}
+      />
+
       {/* Toast Notifications */}
       <div className="toast-container">
         {toasts.map((t) => (
@@ -264,7 +308,7 @@ export default function App() {
         fontSize: '0.8rem',
         color: 'var(--text-dim)'
       }}>
-        <div>QR Studio • Create QR codes quickly and easily</div>
+        <div>QRFlux Studio • Create QR codes quickly and easily</div>
         <div>Built with React & Vite</div>
       </footer>
     </div>

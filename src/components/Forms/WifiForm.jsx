@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function WifiForm({ onChange }) {
-  const [ssid, setSsid] = useState('Home_5G_Network');
-  const [password, setPassword] = useState('SuperSecretPass123');
+  const [ssid, setSsid] = useState('');
+  const [password, setPassword] = useState('');
   const [encryption, setEncryption] = useState('WPA');
   const [hidden, setHidden] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
+    if (!ssid) {
+      onChange('');
+      return;
+    }
     const hiddenStr = hidden ? 'H:true;' : '';
     const wifiStr = `WIFI:S:${ssid};T:${encryption};P:${password};${hiddenStr};`;
     onChange(wifiStr);

@@ -7,8 +7,8 @@ export default function Header({ onOpenScanner, historyCount, onScrollToHistory,
   return (
     <header className="glass-card app-header">
       <div className="logo-group">
-        <div className="logo-badge">
-          <QrCode size={24} />
+        <div className="logo-badge" style={{ padding: 0, overflow: 'hidden', background: 'none' }}>
+          <img src="/logo.png" alt="QRFlux Studio Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-md)' }} />
         </div>
         <div className="logo-text">
           <h1>QRFlux Studio</h1>

@@ -18,11 +18,11 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('url');
 
   // Form input contents
-  const [urlContent, setUrlContent] = useState('https://tenor.com/kYMueBQkwzl.gif');
-  const [textContent, setTextContent] = useState('Welcome to QRFlux Studio!');
-  const [emailPayload, setEmailPayload] = useState('mailto:contact@example.com');
-  const [phonePayload, setPhonePayload] = useState('tel:+15550000000');
-  const [wifiPayload, setWifiPayload] = useState('WIFI:S:MyWiFi;T:WPA;P:Pass123;;');
+  const [urlContent, setUrlContent] = useState('');
+  const [textContent, setTextContent] = useState('');
+  const [emailPayload, setEmailPayload] = useState('');
+  const [phonePayload, setPhonePayload] = useState('');
+  const [wifiPayload, setWifiPayload] = useState('');
 
   // User Authentication state
   const [user, setUser] = useState(() => {

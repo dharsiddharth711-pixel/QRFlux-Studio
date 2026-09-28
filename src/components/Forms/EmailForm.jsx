@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 
 export default function EmailForm({ onChange }) {
-  const [email, setEmail] = useState('contact@example.com');
-  const [subject, setSubject] = useState('Inquiry from QR Code');
-  const [body, setBody] = useState('Hello, I am reaching out regarding...');
+  const [email, setEmail] = useState('');
+  const [subject, setSubject] = useState('');
+  const [body, setBody] = useState('');
 
   useEffect(() => {
+    if (!email && !subject && !body) {
+      onChange('');
+      return;
+    }
     const mailtoStr = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     onChange(mailtoStr);
   }, [email, subject, body, onChange]);
@@ -39,7 +43,7 @@ export default function EmailForm({ onChange }) {
         <textarea
           className="form-input"
           style={{ minHeight: '70px', resize: 'vertical' }}
-          placeholder="Pre-filled email message body..."
+          placeholder="Enter pre-filled email message..."
           value={body}
           onChange={(e) => setBody(e.target.value)}
         />

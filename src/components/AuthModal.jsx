@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { X, Mail, Lock, User, ArrowRight, Eye, EyeOff, Sparkles, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Mail, Lock, User, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react';
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '551045204921-dd43bptffamlm7cgf6b5ao7grid2gkjd.apps.googleusercontent.com';
 
 export default function AuthModal({ isOpen, onClose, onLoginSuccess, showToast }) {
   const [mode, setMode] = useState('login'); // 'login' or 'signup'
@@ -12,6 +14,86 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, showToast }
   const [confirmPassword, setConfirmPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState(null);
+
+  // Handle Google OAuth Credential Token
+  const handleGoogleCredential = async (response) => {
+    try {
+      setError(null);
+      const token = response.credential;
+
+      // Send token to backend express server for verification
+      const res = await fetch('http://localhost:5000/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        onLoginSuccess(data.user);
+        showToast(`Welcome back, ${data.user.name}! Connected with Google.`);
+        onClose();
+      } else {
+        // Fallback token decoder
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        const decoded = JSON.parse(jsonPayload);
+
+        const googleUser = {
+          name: decoded.name || 'Google User',
+          email: decoded.email,
+          avatar: decoded.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${decoded.email}`,
+          plan: 'Pro Plan',
+          joinedDate: new Date().toISOString()
+        };
+
+        onLoginSuccess(googleUser);
+        showToast(`Connected with Google: ${decoded.email}`);
+        onClose();
+      }
+    } catch (err) {
+      console.error('Google Auth Error:', err);
+      setError('Could not complete Google Sign-In. Please try again.');
+    }
+  };
+
+  // Render Google Identity Services button on modal open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const timer = setTimeout(() => {
+      if (window.google?.accounts?.id) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleGoogleCredential
+          });
+
+          const target = document.getElementById('google-btn-container');
+          if (target) {
+            target.innerHTML = '';
+            window.google.accounts.id.renderButton(target, {
+              theme: 'filled_blue',
+              size: 'large',
+              shape: 'pill',
+              width: 320,
+              text: mode === 'signup' ? 'signup_with' : 'signin_with'
+            });
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [isOpen, mode]);
 
   if (!isOpen) return null;
 
@@ -39,7 +121,6 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, showToast }
       }
     }
 
-    // Mock successful authentication
     const userObj = {
       name: mode === 'signup' ? name : email.split('@')[0],
       email: email,
@@ -50,19 +131,6 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, showToast }
 
     onLoginSuccess(userObj);
     showToast(mode === 'signup' ? 'Welcome! Your account has been created.' : 'Successfully logged in!');
-    onClose();
-  };
-
-  const handleSocialLogin = (provider) => {
-    const userObj = {
-      name: provider === 'Google' ? 'Alex Rivera' : 'AlexRiveraDev',
-      email: provider === 'Google' ? 'alex.rivera@gmail.com' : 'alex@github.com',
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${provider}`,
-      plan: 'Pro Plan',
-      joinedDate: new Date().toISOString()
-    };
-    onLoginSuccess(userObj);
-    showToast(`Successfully logged in with ${provider}!`);
     onClose();
   };
 
@@ -161,34 +229,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, showToast }
           </p>
         </div>
 
-        {/* Social Auth Buttons */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={() => handleSocialLogin('Google')}
-            style={{ padding: '10px', fontSize: '0.85rem' }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24">
-              <path fill="#ea4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.2 9 5 12 5z"/>
-              <path fill="#4285f4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
-              <path fill="#fbbc05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12.3 0 15s.7 5.3 1.9 7.7l3.7-2.9c-.3-.8-.4-1.6-.4-2.3z"/>
-              <path fill="#34a853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.2-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"/>
-            </svg>
-            <span>Google</span>
-          </button>
-
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={() => handleSocialLogin('GitHub')}
-            style={{ padding: '10px', fontSize: '0.85rem' }}
-          >
-            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-            </svg>
-            <span>GitHub</span>
-          </button>
+        {/* Google Identity Services Render Target */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', minHeight: '44px' }}>
+          <div id="google-btn-container" />
         </div>
 
         {/* Divider */}

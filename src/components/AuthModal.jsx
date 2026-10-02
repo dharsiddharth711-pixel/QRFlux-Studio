@@ -16,53 +16,36 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, showToast }
   const [error, setError] = useState(null);
 
   // Handle Google OAuth Credential Token
-  const handleGoogleCredential = async (response) => {
-    try {
-      setError(null);
-      const token = response.credential;
+  const handleGoogleCredential = (response) => {
+  try {
+    setError(null);
+    const token = response.credential;
 
-      // Send token to backend express server for verification
-      const res = await fetch('http://localhost:5000/api/auth/google', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token })
-      });
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const decoded = JSON.parse(jsonPayload);
 
-      if (res.ok) {
-        const data = await res.json();
-        onLoginSuccess(data.user);
-        showToast(`Welcome back, ${data.user.name}! Connected with Google.`);
-        onClose();
-      } else {
-        // Fallback token decoder
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(
-          atob(base64)
-            .split('')
-            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-            .join('')
-        );
-        const decoded = JSON.parse(jsonPayload);
+    const googleUser = {
+      name: decoded.name || 'Google User',
+      email: decoded.email,
+      avatar: decoded.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${decoded.email}`,
+      plan: 'Pro Plan',
+      joinedDate: new Date().toISOString()
+    };
 
-        const googleUser = {
-          name: decoded.name || 'Google User',
-          email: decoded.email,
-          avatar: decoded.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${decoded.email}`,
-          plan: 'Pro Plan',
-          joinedDate: new Date().toISOString()
-        };
-
-        onLoginSuccess(googleUser);
-        showToast(`Connected with Google: ${decoded.email}`);
-        onClose();
-      }
-    } catch (err) {
-      console.error('Google Auth Error:', err);
-      setError('Could not complete Google Sign-In. Please try again.');
-    }
-  };
-
+    onLoginSuccess(googleUser);
+    showToast(`Connected with Google: ${decoded.email}`);
+    onClose();
+  } catch (err) {
+    console.error('Google Auth Error:', err);
+    setError('Could not complete Google Sign-In. Please try again.');
+  }
+};
   // Render Google Identity Services button on modal open
   useEffect(() => {
     if (!isOpen) return;
